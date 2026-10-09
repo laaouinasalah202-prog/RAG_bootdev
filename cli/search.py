@@ -22,9 +22,11 @@ def simple_search(query):
         resutl = []
         x, y, z = "", "", f"{string.punctuation}"
         mytable = str.maketrans(x,y,z)
+        stemmer = PorterStemmer()
         
         query_list = query.split()
         query_list = [wrd.translate(mytable) for wrd in query_list if not stopwrd(wrd.translate(mytable))]
+        query_list = [stemmer.stem(wrd) for wrd in query_list]
         
         for movie in data["movies"]:
             for wrd in query_list:
@@ -38,10 +40,4 @@ def simple_search(query):
         
         for num, title in enumerate(resutl):
             print(f"{num}. {title}")
-
-        print( '''Hotel Chevalier'            
- │       - 'Killshot''')
-def tokenizer(query):
-    tokens = query.split()
-    return tokens
 
