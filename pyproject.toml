@@ -1,0 +1,19 @@
+[project]
+name = "rag-bootdev"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "salamoun", email = "laaouinasalah202@gmail.com" }
+]
+requires-python = ">=3.10"
+dependencies = [
+    "nltk==3.9.1",
+]
+
+[project.scripts]
+rag-bootdev = "rag_bootdev:main"
+
+[build-system]
+requires = ["uv_build>=0.12.23,<0.13.0"]
+build-backend = "uv_build"
