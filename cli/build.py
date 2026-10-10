@@ -5,8 +5,8 @@ from logging import exception
 import pickle
 from nltk.classify.senna import path
 import os
-from outiles import load_movie
-from outiles import tokenize_text
+from outiles import load_movie, tokenize_text
+import math
 
 class InvertedIndex:
     def __init__(self):
@@ -70,17 +70,25 @@ class InvertedIndex:
                 self.term_frequencies = pickle.load(f)
         except pickle.PickleError as e:
             print("and error occure when loading the index and docmap form the cache file")
-        return self.index, self.docmap
 
-    def term_tokenize(self, term):
+    def term_tokenize(self, term) -> list:
         token = tokenize_text(term)
         if not token:
             raise ValueError("the term dose not match in any token")
         return token
 
-    def get_tf(self, doc_id, term):
+    def get_tf(self, doc_id, term) -> int:
         token = self.term_tokenize(term)[0]
         if doc_id in self.term_frequencies[token]:
             return self.term_frequencies[token][doc_id]
         else:
             return 0
+
+    def calculate_idf(self, term) -> float:
+        token = self.term_tokenize(term)[0]
+        term_match_doc_count =  len(self.term_frequencies[token])
+        total_doc_count = len(self.docmap)
+        return math.log((total_doc_count + 1) / (term_match_doc_count + 1))
+
+    def calculate_tfidf(self, term, doc_id) -> float:
+        return self.calculate_idf(term) * self.get_tf(doc_id, term)
