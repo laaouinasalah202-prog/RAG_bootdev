@@ -18,7 +18,7 @@ def tokenize_text(text):
     text = text.split()
     text = [wrd.translate(mytable) for wrd in text if not stopwrd(wrd.translate(mytable))]
     text_tokenized = [stemmer.stem(wrd) for wrd in text]
-    return set(text_tokenized)
+    return text_tokenized
 
 def load_movie():
     with open("data/movies.json") as d:
