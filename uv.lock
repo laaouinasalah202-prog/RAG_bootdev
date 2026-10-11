@@ -1,6 +1,17 @@
 version = 1
-revision = 5
+revision = 3
 requires-python = ">=3.10"
+
+[[package]]
+name = "booting"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "nltk" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "nltk", specifier = "==3.9.1" }]
 
 [[package]]
 name = "click"
@@ -55,17 +66,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/3c/87/db8be88ad32c2d042
 wheels = [
     { url = "https://files.pythonhosted.org/packages/4d/66/7d9e26593edda06e8cb531874633f7c2372279c3b0f46235539fe546df8b/nltk-3.9.1-py3-none-any.whl", hash = "sha256:4fa26829c5b00715afe3061398a8989dc643b92ce7dd93fb4585a70930d168a1", size = 1505442, upload-time = "2024-08-18T19:48:21.909Z" },
 ]
-
-[[package]]
-name = "rag-bootdev"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "nltk" },
-]
-
-[package.metadata]
-requires-dist = [{ name = "nltk", specifier = "==3.9.1" }]
 
 [[package]]
 name = "regex"
