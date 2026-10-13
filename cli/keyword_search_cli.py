@@ -1,7 +1,7 @@
 import argparse
 from operator import sub
 import search
-import build
+from lib import build
 
 def main() -> None:
     BM25_K1 = 1.5
@@ -79,6 +79,7 @@ def main() -> None:
             
             for id, score in (result):
                 print(f'({1}) {invert_index.docmap[id]["title"]} - Score: {score:.2f}')
+
 
 if __name__ == "__main__":
     main()

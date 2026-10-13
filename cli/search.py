@@ -1,5 +1,5 @@
 from outiles import load_movie, tokenize_text
-from build import InvertedIndex
+from lib.build import InvertedIndex
 
 def simple_search(query, invert_index):
         query_tokenized = list(tokenize_text(query))
