@@ -5,6 +5,10 @@ import json
 def main() -> None:
     parser = argparse.ArgumentParser(description="Semantic Search CLI")
     subparsers = parser.add_subparsers(dest="command")
+    chunk_parser = subparsers.add_parser("chunk")
+    chunk_parser.add_argument("text", help="text to split")
+    chunk_parser.add_argument("--chunk-size", type=int, default=200)
+    chunk_parser.add_argument("--overlap", type=int, help="how much to include in order to preserve the context")
     embed_text_parser = subparsers.add_parser("embed_text")
     embed_query_parser = subparsers.add_parser("embed_query", help="embed the query using the embedding model")
     search_parser = subparsers.add_parser("search", help="search for similarity of a query")
@@ -35,6 +39,27 @@ def main() -> None:
             resutl = semantic_search.search(args.query, args.limit)
             for n, i in enumerate(resutl):
                 print(f'{n}. {i["title"]} (score: {i["cosine"]})\n')
+
+        case "chunk":
+            words = args.text.split()
+            size = args.chunk_size
+            overlap = args.overlap
+        
+            if size <= 0:
+                raise SystemExit("chunk_size must be positive")
+            if overlap < 0 or overlap >= size:
+                raise SystemExit("overlap must be >= 0 and less than chunk_size")
+        
+            step = size - overlap
+            chunks = [
+                " ".join(words[i:i + size])
+                for i in range(0, len(words), step)
+            ]
+        
+            print(f"Chunking {len(words)} words into {len(chunks)} chunks")
+            for i, chunk in enumerate(chunks, 1):
+                print(f"{i}. {chunk}")
+                
             
 if __name__ == "__main__":
     main()
