@@ -8,8 +8,8 @@ def main() -> None:
     chunk_parser = subparsers.add_parser("chunk")
     semantic_chunk_parser = subparsers.add_parser("semantic_chunk")
     semantic_chunk_parser.add_argument("text")
-    semantic_chunk_parser.add_argument("--max-chunk-size", type=int)
-    semantic_chunk_parser.add_argument("--overlap", type=int, default=4)
+    semantic_chunk_parser.add_argument("--max-chunk-size", type=int, default=4)
+    semantic_chunk_parser.add_argument("--overlap", type=int, default=0)
     chunk_parser.add_argument("text", help="text to split")
     chunk_parser.add_argument("--chunk-size", type=int, default=200)
     chunk_parser.add_argument("--overlap", type=int, help="how much to include in order to preserve the context")
@@ -61,11 +61,9 @@ def main() -> None:
         case "semantic_chunk":
             text = args.text
             text_splited = re.split(r"(?<=[.!?])\s+", text)
-            print(text_splited)
             size = args.max_chunk_size
             overlap = args.overlap
-            step = abs(size - overlap)
-            print(step)
+            step = size - overlap
             chunks = [
                 " ".join(text_splited[i: size + i])
                 for i in range(0, len(text_splited), step)
