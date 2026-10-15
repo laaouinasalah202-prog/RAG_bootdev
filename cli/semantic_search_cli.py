@@ -1,12 +1,19 @@
 import argparse
-from lib.semantic_search import SemanticSearch, embed_text, verify_model, verify_embeddings, embed_query_text
+import enum
+from lib.semantic_search import SemanticSearch, embed_text, verify_model, verify_embeddings, embed_query_text, semantic_chunk, ChunkedSemanticSearch, load_movies
 import json
 import re
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Semantic Search CLI")
     subparsers = parser.add_subparsers(dest="command")
+    embed_chunk_parser = subparsers.add_parser("embed_chunks")
     chunk_parser = subparsers.add_parser("chunk")
     semantic_chunk_parser = subparsers.add_parser("semantic_chunk")
+    search_chunked_parser = subparsers.add_parser("search_chunked")
+    search_chunked_parser.add_argument("query", type=str)
+    search_chunked_parser.add_argument("--limit", type=int, default=5)
     semantic_chunk_parser.add_argument("text")
     semantic_chunk_parser.add_argument("--max-chunk-size", type=int, default=4)
     semantic_chunk_parser.add_argument("--overlap", type=int, default=0)
@@ -31,14 +38,16 @@ def main() -> None:
 
         case "embed_text":
             embed_text(args.text)
+            
         case "verify_embeddings":
             verify_embeddings()
+            
         case "embed_query":
             embed_query_text(args.query)
+            
         case "search":
-            semantic_search = SemanticSearch()
-            with open("data/movies.json", "r") as f:
-                movies = json.load(f)
+            semantic_search = SemanticSearch("all-MiniLM-L6-v2")
+            movies = load_movies()
             semantic_search.load_or_create_embeddings(movies)
             resutl = semantic_search.search(args.query, args.limit)
             for n, i in enumerate(resutl):
@@ -59,19 +68,26 @@ def main() -> None:
                 print(f"{n}. {chunk.strip()}")
                 
         case "semantic_chunk":
-            text = args.text
-            text_splited = re.split(r"(?<=[.!?])\s+", text)
-            size = args.max_chunk_size
-            overlap = args.overlap
-            step = size - overlap
-            chunks = [
-                " ".join(text_splited[i: size + i])
-                for i in range(0, len(text_splited), step)
-            ]
-            
+            chunks = semantic_chunk(args.text, args.max_chunk_size, args.overlap)
+             
             print(f"Semantically chunking {len(args.text)} characters")
             for n, chunk in enumerate(chunks, 1):
                 print(f"{n}. {chunk.strip()}")
-            
+
+        case "embed_chunks":
+            movies = load_movies()
+            semantic_chunk_search = ChunkedSemanticSearch("all-MiniLM-L6-v2")
+            embeddings = semantic_chunk_search.load_or_create_chunk_embeddings(movies)
+            print(f"Generated {len(embeddings)} chunked embeddings")
+
+        case "search_chunked":
+            movies = load_movies
+            semantic_chunk_search = ChunkedSemanticSearch("all-MiniLM-L6-v2")
+            res = semantic_chunk_search.search_chunks(args.query, args.limit)
+
+            for i, r in enumerate(res, 1):
+                print(f'\n{i}. {r["title"]} (score: {r["score"]:.4f})')
+                print(f'   {r["document"]}...')
+    
 if __name__ == "__main__":
     main()
