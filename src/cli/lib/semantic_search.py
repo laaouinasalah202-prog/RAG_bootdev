@@ -57,6 +57,7 @@ class SemanticSearch:
         return embeddings
 
 def semantic_chunk(text, size, overlap):
+    text = text.strip()
     text_splited = re.split(r"(?<=[.!?])\s+", text)
     step = size - overlap
     chunks = [
@@ -134,7 +135,7 @@ class ChunkedSemanticSearch(SemanticSearch):
             )
         best_score_limit = sorted_movies[:limit]
         result_dict = [
-            {f"id": movie[0], "title": self.documents_map[movie[0]]["title"], "document": self.documents_map[movie[0]]["description"][:100], "score": round(movie[1], 3)} 
+            {"id": movie[0], "title": self.documents_map[movie[0]]["title"], "document": self.documents_map[movie[0]]["description"][:100], "score": round(movie[1], 3)} 
             for movie in best_score_limit
         ]
         return result_dict

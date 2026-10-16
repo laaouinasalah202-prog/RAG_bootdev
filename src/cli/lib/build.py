@@ -19,6 +19,7 @@ class InvertedIndex:
         self.doc_lengths = {}
         CACHE_DIR = "cache"
         self.doc_lengths_path = os.path.join(CACHE_DIR, "doc_lengths.pkl")
+        self.index_path = "cache/index.pkl"
         
     def __add_document(self, doc_id, text):
         self.docmap[doc_id] = {
@@ -57,7 +58,7 @@ class InvertedIndex:
             os.makedirs("cache")
         import pickle
         try:
-            with open("cache/index.pkl", "wb") as f:
+            with open(self.index_path, "wb") as f:
                 pickle.dump(self.index, f, protocol=None) 
             with open("cache/docmap.pkl", "wb") as f:
                 pickle.dump(self.docmap, f, protocol=None)
@@ -70,7 +71,7 @@ class InvertedIndex:
             
     def load(self):
         try:
-            with open("cache/index.pkl", "rb") as f:
+            with open(self.index_path, "rb") as f:
                 self.index = pickle.load(f)   
             with open("cache/docmap.pkl", "rb") as f:
                 self.docmap = pickle.load(f) 
@@ -131,7 +132,7 @@ class InvertedIndex:
         bm25 = self.get_bm25_idf(term) * self.get_bm25_tf(doc_id, term)
         return bm25
 
-    def bm25_search(self, query, limit=5):
+    def bm25_search(self, query, limit=5) -> list:
         tokenized_query = tokenize_text(query)
         doc_bm25 = {}
         for doc_id in self.docmap:
