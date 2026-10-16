@@ -26,14 +26,14 @@ class HybridSearch:
 
         for i in range(min(len(bm25), limit * 500)):
             if rank_map.get(bm25[i][0]):
-                rank_map[bm25[i][0]].update({"bm25_rank": i})
+                rank_map[bm25[i][0]].update({"bm25_rank": i+1})
             else:
-                rank_map.update({bm25[i][0]: {"bm25_rank": i}})
+                rank_map.update({bm25[i][0]: {"bm25_rank": i+1}})
                 
             if rank_map.get(semantic_seach[i]["id"]):
-                rank_map[semantic_seach[i]["id"]].update({"semantic_rank": i})
+                rank_map[semantic_seach[i]["id"]].update({"semantic_rank": i+1})
             else:
-                rank_map.update({semantic_seach[i]["id"]: {"semantic_rank": i}})
+                rank_map.update({semantic_seach[i]["id"]: {"semantic_rank": i+1}})
 
         for _,v in rank_map.items():
             if v.get("bm25_rank") is None:

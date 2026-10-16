@@ -13,3 +13,4 @@ data
 .python-version
 cache/
 cache/chunk_embeddings.npy
+.env

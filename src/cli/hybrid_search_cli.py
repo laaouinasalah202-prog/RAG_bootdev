@@ -25,7 +25,7 @@ def main() -> None:
     rrf_search_parser.add_argument(
         "--enhance",
         type=str,
-        choices=["spell", "rewrite"],
+        choices=["spell", "rewrite", "expand"],
         help="Query enhancement method",
     )
     rrf_search_parser.add_argument("-k", default=60, type=int)
@@ -113,7 +113,30 @@ def main() -> None:
                 new_query = responses.choices[0].message.content
                 print(f"Enhanced query ({args.enhance}): '{args.query}' -> '{new_query}'\n")
                 args.query = new_query
+            if args.enhance == "expand":
+                client = prepare_model()
+                content = f"""Expand the user-provided movie search query below with related terms.
                 
+                Add synonyms and related concepts that might appear in movie descriptions.
+                Keep expansions relevant and focused.
+                Output only the additional terms; they will be appended to the original query.
+                
+                Examples:
+                - "scary bear movie" -> "scary horror grizzly bear movie terrifying film"
+                - "action movie with bear" -> "action thriller bear chase fight adventure"
+                - "comedy with bear" -> "comedy funny bear humor lighthearted"
+                
+                User query: "{args.query}"
+                """
+                messages = [
+                    {
+                        "role": "user",
+                        "content": content
+                    }
+                ]
+                response = client.chat.completions.create(messages=messages, model="openrouter/free")
+                expanded_query = response.choices[0].message.content
+                print(f"Enhanced query ({args.enhance}): '{args.query}' -> '{expanded_query}'\n")
             hybrid_search = HybridSearch()
             best_result = hybrid_search.rrf_search(args.query, args.k, args.limit)
             for n, rs in enumerate(best_result, 1):

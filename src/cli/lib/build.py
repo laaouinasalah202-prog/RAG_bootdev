@@ -90,7 +90,7 @@ class InvertedIndex:
 
     def get_tf(self, doc_id, term) -> int:
         token = self.term_tokenize(term)[0]
-        if doc_id in self.term_frequencies[token]:
+        if token in self.term_frequencies and doc_id in self.term_frequencies[token]:
             return self.term_frequencies[token][doc_id]
         else:
             return 0
@@ -110,7 +110,7 @@ class InvertedIndex:
         if token in self.term_frequencies:
             df = len(self.term_frequencies[token])
         else:
-            raise KeyError("token not found")
+            df = 0
         idf_bm25 = math.log((N - df + 0.5) / (df + 0.5) + 1)
         return idf_bm25
 
