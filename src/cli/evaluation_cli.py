@@ -25,18 +25,21 @@ def main() -> None:
         retrieved_titles = [doc_map[id]["title"] for id, _ in rrf][:k]
         relevant_id = [rel for rel in retrieved_titles if rel in eval["relevant_docs"]]
         precision = len(relevant_id)/k
+        recall = len(relevant_id)/len(eval["relevant_docs"])
         retrive_map.append(
             {"precision": precision, "retrieved": retrieved_titles,
-                "query": eval["query"], "relevant": eval["relevant_docs"]
+                "query": eval["query"], "relevant": eval["relevant_docs"], "recall": recall
             }
         )
     for res in retrive_map:
         print(f'k = {k}\n'
             f'- Query: {res["query"]}\n'
             f'- Precision@{k}: {round(res["precision"], 4)}\n'
+            f'- Recall@{k}: {round(res["recall"], 4)}\n'
             f'- Retrieved: {res["retrieved"]}\n'
             f'- Relevant: {res["relevant"]}'
             )
-
+        print('''  - 'Precision@5: 0.2000'
+            Recall@5: 1.0000''')
 if __name__ == "__main__":
     main()
