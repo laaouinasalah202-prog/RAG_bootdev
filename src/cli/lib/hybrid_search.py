@@ -1,3 +1,4 @@
+from operator import truediv
 import os
 
 from .build import InvertedIndex
@@ -18,8 +19,32 @@ class HybridSearch:
         self.idx.load()
         return self.idx.bm25_search(query, limit)
 
-    def rrf_search(self, query: str, k: int, limit: int = 10) -> list[dict]:
-        raise NotImplementedError("RRF hybrid search is not implemented yet.")
+    def rrf_search(self, query: str, k: int, limit: int = 10):
+        bm25 = self._bm25_search(query, limit * 500)
+        semantic_seach = self.semantic_search.search_chunks(query, limit * 500)
+        rank_map = {}
+
+        for i in range(min(len(bm25), limit * 500)):
+            if rank_map.get(bm25[i][0]):
+                rank_map[bm25[i][0]].update({"bm25_rank": i})
+            else:
+                rank_map.update({bm25[i][0]: {"bm25_rank": i}})
+                
+            if rank_map.get(semantic_seach[i]["id"]):
+                rank_map[semantic_seach[i]["id"]].update({"semantic_rank": i})
+            else:
+                rank_map.update({semantic_seach[i]["id"]: {"semantic_rank": i}})
+
+        for _,v in rank_map.items():
+            if v.get("bm25_rank") is None:
+                v["bm25_rank"] = 0
+            if v.get("semantic_rank") is None:
+                v["semantic_rank"] = 0
+            rrf = rrf_score(v["bm25_rank"]) + rrf_score(v["semantic_rank"])
+            v.update({"rrf": rrf})
+
+        best_result = sorted(rank_map.items(), key=lambda item: item[1]["rrf"], reverse=True)
+        return best_result[:limit]
 
     def weighted_search(self, query, limit, alpha) -> list:
         bm25_search = self._bm25_search(query, limit * 500)
@@ -51,7 +76,8 @@ class HybridSearch:
             
         result = sorted(doc_scoremap.items(), key=lambda item: item[1]["hybrid_score"], reverse=True)
         return result[:limit]
-    
+
+        
 def normalize_score(score, min_score, max_score):
     if max_score == min_score:
         return 1.0
@@ -60,3 +86,6 @@ def normalize_score(score, min_score, max_score):
 
 def hybrid_score(bm25_score: float, semantic_score: float, alpha: float = 0.5) -> float:
     return alpha * bm25_score + (1 - alpha) * semantic_score
+
+def rrf_score(rank: int, k: int = 60) -> float:
+    return 1 / (k + rank)
