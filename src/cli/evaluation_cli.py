@@ -26,20 +26,25 @@ def main() -> None:
         relevant_id = [rel for rel in retrieved_titles if rel in eval["relevant_docs"]]
         precision = len(relevant_id)/k
         recall = len(relevant_id)/len(eval["relevant_docs"])
+        f1_score = 2 * (precision * recall) / (precision + recall) if precision*recall > 0 else 0
         retrive_map.append(
-            {"precision": precision, "retrieved": retrieved_titles,
-                "query": eval["query"], "relevant": eval["relevant_docs"], "recall": recall
+            {"precision": round(precision, 4), "retrieved": retrieved_titles,
+                "query": eval["query"], "relevant": eval["relevant_docs"],
+                "recall": round(recall, 4), "f1_score": round(f1_score, 4)
             }
         )
+
     for res in retrive_map:
         print(f'k = {k}\n'
             f'- Query: {res["query"]}\n'
-            f'- Precision@{k}: {round(res["precision"], 4)}\n'
-            f'- Recall@{k}: {round(res["recall"], 4)}\n'
+            f'- Precision@{k}: {res["precision"]:.4f}\n'
+            f'- Recall@{k}: {res["recall"]:.4f}\n'
+            f'- F1 Score: {res["f1_score"]:.4f}\n'
             f'- Retrieved: {res["retrieved"]}\n'
             f'- Relevant: {res["relevant"]}'
             )
         print('''  - 'Precision@5: 0.2000'
             Recall@5: 1.0000''')
+
 if __name__ == "__main__":
     main()

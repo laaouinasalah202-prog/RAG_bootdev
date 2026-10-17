@@ -15,6 +15,36 @@ def prepare_model():
     )
     return client
 
+def llm_evaluate(query, formatted_results):
+    client = prepare_model()
+    content = f"""Rate how relevant each result is to this query on a 0-3 scale:
+    
+    Query: "{query}"
+    
+    Results:
+    {chr(10).join(formatted_results)}
+    
+    Scale:
+    - 3: Highly relevant
+    - 2: Relevant
+    - 1: Marginally relevant
+    - 0: Not relevant
+    
+    Do NOT give any numbers other than 0, 1, 2, or 3.
+    
+    Return ONLY the scores in the same order you were given the documents. Return a valid JSON list, nothing else. For example:
+    
+    [2, 0, 3, 2, 0, 1]"""
+    messages = [
+        {
+            "role": "user",
+            "content": content
+        }
+    ]
+    response = client.chat.completions.create(messages=messages, model="openrouter/free")
+    return response.choices[0].message.content
+
+    
 def main() -> None:
     parser = argparse.ArgumentParser(description="Hybrid Search CLI")
     subparser = parser.add_subparsers(dest="command", help="Available commands")
@@ -29,7 +59,7 @@ def main() -> None:
         help="Query enhancement method",
     )
     rrf_search_parser.add_argument("-k", default=60, type=int)
-    
+    rrf_search_parser.add_argument("--evaluate", help="evaluate the search result")
     
     weighted_search_parser = subparser.add_parser("weighted-search")
     weighted_search_parser.add_argument("query")
