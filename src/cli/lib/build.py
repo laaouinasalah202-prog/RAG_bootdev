@@ -85,19 +85,23 @@ class InvertedIndex:
     def term_tokenize(self, term) -> list:
         token = tokenize_text(term)
         if not token:
-            raise ValueError("the term dose not match in any token")
+            return []
         return token
 
     def get_tf(self, doc_id, term) -> int:
-        token = self.term_tokenize(term)[0]
-        if token in self.term_frequencies and doc_id in self.term_frequencies[token]:
-            return self.term_frequencies[token][doc_id]
+        token = self.term_tokenize(term)
+        if len(token) == 0:
+            return 0
+        if token[0] in self.term_frequencies and doc_id in self.term_frequencies[token[0]]:
+            return self.term_frequencies[token[0]][doc_id]
         else:
             return 0
 
     def calculate_idf(self, term) -> float:
-        token = self.term_tokenize(term)[0]
-        term_match_doc_count =  len(self.term_frequencies[token])
+        token = self.term_tokenize(term)
+        if len(token) == 0:
+            return 0
+        term_match_doc_count =  len(self.term_frequencies[token[0]])
         total_doc_count = len(self.docmap)
         return math.log((total_doc_count + 1) / (term_match_doc_count + 1))
 
@@ -106,9 +110,11 @@ class InvertedIndex:
 
     def get_bm25_idf(self, term: str) -> float:
         N = len(self.docmap)
-        token = self.term_tokenize(term)[0]
-        if token in self.term_frequencies:
-            df = len(self.term_frequencies[token])
+        token = self.term_tokenize(term)
+        if len(token) == 0:
+            return 0
+        if token[0] in self.term_frequencies:
+            df = len(self.term_frequencies[token[0]])
         else:
             df = 0
         idf_bm25 = math.log((N - df + 0.5) / (df + 0.5) + 1)

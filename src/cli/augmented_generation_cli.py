@@ -16,7 +16,9 @@ def main() -> None:
     citation_parser = subparsers.add_parser("citations")
     citation_parser.add_argument("query")
     citation_parser.add_argument("--limit", default=10, type=int)
-    
+    question_parser = subparsers.add_parser("question")
+    question_parser.add_argument("question")
+    question_parser.add_argument("--limit", type=int, default=10)
     args = parser.parse_args()
 
     match args.command:
@@ -89,7 +91,7 @@ def main() -> None:
             rrf_res = hybrid_search.rrf_search(query, k, limit=args.limit)
             client = prepare_model()
             result = [f'title: {doc_map[res[0]]["title"]}, description: {doc_map[res[0]]["description"]}' for res in rrf_res]
-            content = prompt = f"""Answer the query below and give information based on the provided documents.
+            prompt = f"""Answer the query below and give information based on the provided documents.
             
             The answer should be tailored to users of Webflyx, a movie streaming service.
             If not enough information is available to provide a good answer, say so, but give the best answer possible while citing the sources available.
@@ -110,7 +112,7 @@ def main() -> None:
             messages = [
                 {
                     "role": "user",
-                    "content": content
+                    "content": prompt
                 }
             ]
             response = client.chat.completions.create(messages=messages, model="openrouter/free")
@@ -118,6 +120,41 @@ def main() -> None:
             for i in rrf_res:
                 print(f'- {doc_map[i[0]]["title"]}')
             print(f'LLM Answer:\n{response.choices[0].message.content}')
+        case "question":
+            hybrid_search = HybridSearch()
+            doc_map = hybrid_search.idx.docmap
+            k = 60
+            rrf_res = hybrid_search.rrf_search(args.question, k, limit=args.limit)
+            client = prepare_model()
+            result = [f'title: {doc_map[res[0]]["title"]}, description: {doc_map[res[0]]["description"]}' for res in rrf_res]
+            prompt = f"""Answer the user's question based on the provided movies that are available on Webflyx, a streaming service.
+            
+            Question: {args.question}
+            
+            Documents:
+            {result}
+            
+            Instructions:
+            - Answer questions directly and concisely
+            - Be casual and conversational
+            - Don't be cringe or hype-y
+            - Talk like a normal person would in a chat conversation
+            
+            Answer:"""
+            messages = [
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ]
+            response = client.chat.completions.create(messages=messages, model="openrouter/free")
+            print('Search Results:')
+            for i in rrf_res:
+                print(f'- {doc_map[i[0]]["title"]}')
+            print(f'Answer:\n{response.choices[0].message.content}')
+            
+
+
             
         case _:
             parser.print_help()
