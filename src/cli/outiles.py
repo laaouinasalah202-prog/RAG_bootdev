@@ -1,6 +1,9 @@
 import json
 import string
 from nltk.stem import PorterStemmer 
+from dotenv import load_dotenv
+from openai import OpenAI
+import os
 
 def stopwrd(word):
     with open("data/stop_word.txt") as fd:
@@ -27,3 +30,14 @@ def load_movie():
         except Exception as e:
             print(e)
         return data
+
+def prepare_model():
+    load_dotenv()
+    api_key = os.environ.get("OPENROUTER_API_KEY")
+    if not api_key:
+        raise RuntimeError("OPENROUTER_API_KEY environment variable not set")
+    client = OpenAI(
+        base_url="https://openrouter.ai/api/v1",
+        api_key=api_key,
+    )
+    return client

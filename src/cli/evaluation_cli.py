@@ -2,6 +2,7 @@ import argparse
 import json
 from lib.hybrid_search import HybridSearch
 
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Search Evaluation CLI")
     parser.add_argument(
