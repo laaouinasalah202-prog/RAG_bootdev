@@ -1,8 +1,12 @@
 import argparse
+
+from typing_extensions import Optional
 from lib.hybrid_search import HybridSearch
 import os
 from dotenv import load_dotenv
 from openai import OpenAI
+import json
+
 
 def prepare_model():
     load_dotenv()
@@ -42,8 +46,8 @@ def llm_evaluate(query, formatted_results):
         }
     ]
     response = client.chat.completions.create(messages=messages, model="openrouter/free")
-    return response.choices[0].message.content
-
+    resp =  json.loads(response.choices[0].message.content)
+    return resp
     
 def main() -> None:
     parser = argparse.ArgumentParser(description="Hybrid Search CLI")
@@ -59,7 +63,7 @@ def main() -> None:
         help="Query enhancement method",
     )
     rrf_search_parser.add_argument("-k", default=60, type=int)
-    rrf_search_parser.add_argument("--evaluate", help="evaluate the search result")
+    rrf_search_parser.add_argument("--evaluate", help="evaluate the search result", action="store_true")
     
     weighted_search_parser = subparser.add_parser("weighted-search")
     weighted_search_parser.add_argument("query")
@@ -174,6 +178,11 @@ def main() -> None:
                 f'RRF Score: {rs[1]["rrf"]}\n'
                 f'BM25 Rank: {rs[1]["bm25_rank"]}, Semantic Rank: {rs[1]["semantic_rank"]}\n'
                 f'{hybrid_search.idx.docmap[rs[0]]["description"][:100]}')
-    
+            formated_result = [f'title : {hybrid_search.idx.docmap[res[0]]["title"]}, description {hybrid_search.idx.docmap[res[0]]["description"]}' for  res in best_result]
+            if args.evaluate:
+                llm_rank = llm_evaluate(args.query, formated_result)
+                for i, n in enumerate(best_result):
+                    print(f'{i+1}. {hybrid_search.idx.docmap[n[0]]["title"]}: {llm_rank[i]}/3')
+                
 if __name__ == "__main__":
     main()
