@@ -1,11 +1,12 @@
 import argparse
+from audioop import cross
 from time import sleep
 from typing_extensions import Optional
 from lib.hybrid_search import HybridSearch, rrf_score
 import os
 from outiles import prepare_model
 import json
-
+from sentence_transformers import CrossEncoder
 
 
 
@@ -45,7 +46,7 @@ def main() -> None:
     normalize_parser = subparser.add_parser("normalize")
     rrf_search_parser = subparser.add_parser("rrf-search")
     rrf_search_parser.add_argument("query")
-    rrf_search_parser.add_argument("--rerank-method", choices=["individual", "batch"])
+    rrf_search_parser.add_argument("--rerank-method", choices=["individual", "batch", "cross_encoder"])
     rrf_search_parser.add_argument("--limit", default=5, type=int)
     rrf_search_parser.add_argument(
         "--enhance",
@@ -256,12 +257,24 @@ def main() -> None:
                         BM25 Rank: {best_result[n-1][1]["bm25_rank"]}, Semantic Rank: {best_result[n-1][1]["semantic_rank"]}
                         {doc_map[best_result[n-1][0]]["description"]}
                         ''')
-
-                    
-                if args.evaluate:
-                    formated_result = [f'title : {hybrid_search.idx.docmap[res[0]]["title"]}, description {hybrid_search.idx.docmap[res[0]]["description"]}' for  res in best_result]
-                    llm_rank = llm_evaluate(args.query, formated_result)
-                    for i, n in enumerate(best_result):
-                        print(f'{i+1}. {hybrid_search.idx.docmap[n[0]]["title"]}: {llm_rank[i]}/3')
+                        
+            if args.rerank_method == "cross_encoder":
+                doc_map = hybrid_search.idx.docmap
+                pairs = [[args.query, f'{doc_map[doc[0]].get("title", "")} - {doc_map[doc[0]].get("title", "")}'] for doc in best_result]
+                cross_encoder = CrossEncoder("cross-encoder/ms-marco-TinyBERT-L2-v2")
+                scores = cross_encoder.predict(pairs)
+                for n, i in enumerate(scores, 1):
+                    print(f'''{n}. {doc_map[best_result[n-1][0]]["title"]}
+                        Cross Encoder Score: {i}
+                        RRF Score: {best_result[n-1][1]["rrf"]}
+                        BM25 Rank: {best_result[n-1][1]["bm25_rank"]}, Semantic Rank: {best_result[n-1][1]["semantic_rank"]}
+                        {doc_map[best_result[n-1][0]]["description"]}
+                        ''')
+                
+            if args.evaluate:
+                formated_result = [f'title : {hybrid_search.idx.docmap[res[0]]["title"]}, description {hybrid_search.idx.docmap[res[0]]["description"]}' for  res in best_result]
+                llm_rank = llm_evaluate(args.query, formated_result)
+                for i, n in enumerate(best_result):
+                    print(f'{i+1}. {hybrid_search.idx.docmap[n[0]]["title"]}: {llm_rank[i]}/3')
 if __name__ == "__main__":
     main()
